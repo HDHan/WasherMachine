@@ -1,0 +1,26 @@
+module Washer {
+	
+	struct Reservation{
+		string who;
+		string duration;
+	};
+
+	typedef sequence<Reservation> ReservationSeq;
+
+	interface ReservationQueue {
+		readonly attribute ReservationSeq reservations;
+		
+		boolean enqueue(in Reservation reservation);
+		Reservation dequeue();
+		boolean isEmpty();
+		boolean isFull();
+		boolean remove(in long index);
+	};
+
+	interface Washer {
+		readonly attribute ReservationQueue reservationQueue;
+
+		boolean on();
+		boolean off();
+	};
+};
