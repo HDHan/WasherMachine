@@ -2,7 +2,7 @@ module Washer {
 	
 	struct Reservation{
 		string who;
-		string duration;
+		long long duration;
 	};
 
 	typedef sequence<Reservation> ReservationSeq;
