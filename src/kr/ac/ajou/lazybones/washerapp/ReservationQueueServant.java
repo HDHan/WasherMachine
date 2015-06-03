@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import kr.ac.ajou.lazybones.washerapp.Washer.Reservation;
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueuePOA;
 
+/**
+ * Not implemented yet.
+ * @author AJOU
+ *
+ */
 public class ReservationQueueServant extends ReservationQueuePOA {
 
 	ArrayList<Reservation> reservations;
