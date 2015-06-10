@@ -37,12 +37,6 @@ public class ReservationQueueServant extends ReservationQueuePOA {
 	}
 
 	@Override
-	public boolean isFull() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public boolean remove(int index) {
 		// TODO Auto-generated method stub
 		return false;
