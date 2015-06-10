@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueue;
+import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueueHelper;
 import kr.ac.ajou.lazybones.washerapp.Washer.Washer;
 import kr.ac.ajou.lazybones.washerapp.Washer.WasherHelper;
 
@@ -49,7 +51,10 @@ public class WasherDaemon extends Thread {
 	private NameComponent path[];
 
 	// servant: WasherServant which the daemon holds
-	private WasherServant servant;
+	private WasherServant washerServant;
+
+	// servant: ReservationQueueServant which the daemon holds
+	private ReservationQueueServant queueServant;
 
 	// orb: Object Request Broker object for shutting down
 	private ORB orb;
@@ -60,8 +65,12 @@ public class WasherDaemon extends Thread {
 		this.washerName = washerName;
 	}
 
-	public WasherServant getServant() {
-		return servant;
+	public WasherServant getWasherServant() {
+		return washerServant;
+	}
+	
+	public ReservationQueueServant getQueueServant() {
+		return queueServant;
 	}
 
 	/**
@@ -87,20 +96,18 @@ public class WasherDaemon extends Thread {
 					.resolve_initial_references("RootPOA"));
 			rootpoa.the_POAManager().activate();
 
-			// STEP 3: create servant object and give it the ORB
-			// reference (for shutdown())
-			servant = new WasherServant();
-			servant.setName(washerName);
+			// STEP 3: create servant object
+			washerServant = new WasherServant();
+			queueServant = washerServant.reservationQueue;
+			washerServant.setName(washerName);
 
 			// servant.setORB(orb);
 
 			// STEP 4: get an object reference based on the servant
 			// implementation.
-			// The object reference must be narrowed to the correct
-			// type, in this case Hello.
-			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(servant);
+			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(queueServant);
 
-			Washer washer = WasherHelper.narrow(ref);
+			ReservationQueue queue = ReservationQueueHelper.narrow(ref);
 
 			// STEP 5: get reference of the root naming context (naming
 			// service).
@@ -114,7 +121,7 @@ public class WasherDaemon extends Thread {
 			// same name.
 			String name = washerName;
 			path = ncRef.to_name(name);
-			ncRef.bind(path, washer);
+			ncRef.bind(path, queue);
 
 			// ncRef.unbind(path);
 

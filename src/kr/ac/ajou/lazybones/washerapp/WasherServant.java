@@ -11,7 +11,7 @@ import kr.ac.ajou.lazybones.washerapp.Washer.WasherPOA;
 public class WasherServant extends WasherPOA{
 
 	private String name;
-	ReservationQueue reservationQueue;
+	ReservationQueueServant reservationQueue = new ReservationQueueServant();
 	
 	int count = 0;
 	private boolean isOn;
@@ -23,16 +23,6 @@ public class WasherServant extends WasherPOA{
 	
 	public String getName(){
 		return this.name;
-	}
-	
-	public void setReservationQueue(ReservationQueue reservationQueue) {
-		this.reservationQueue = reservationQueue;
-	}
-
-	@Override
-	public ReservationQueue reservationQueue() {
-		// TODO Auto-generated method stub
-		return reservationQueue;
 	}
 
 	@Override
@@ -49,6 +39,12 @@ public class WasherServant extends WasherPOA{
 		// TODO Auto-generated method stub
 		isOn = false;
 		return true;
+	}
+
+	@Override
+	public long runningTime() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

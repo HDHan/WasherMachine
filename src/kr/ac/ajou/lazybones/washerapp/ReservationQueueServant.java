@@ -23,11 +23,6 @@ public class ReservationQueueServant extends ReservationQueuePOA {
 		return reservations.toArray(new Reservation[reservations.size()]);
 	}
 
-	@Override
-	public boolean enqueue(Reservation reservation) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	@Override
 	public Reservation dequeue() {
@@ -49,6 +44,18 @@ public class ReservationQueueServant extends ReservationQueuePOA {
 
 	@Override
 	public boolean remove(int index) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Reservation[] reservationsBy(String who) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean enqueue(String who, long duration) {
 		// TODO Auto-generated method stub
 		return false;
 	}
