@@ -76,7 +76,7 @@ public class WasherDaemon extends Thread {
 
 		Properties props = new Properties();
 		props.put("org.omg.CORBA.ORBInitialPort", "1050");
-		props.put("org.omg.CORBA.ORBInitialHost", "localhost"); //210.107.197.213
+		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213");
 
 		// STEP 1: create and initialize the ORB
 		orb = ORB.init(args, props);
