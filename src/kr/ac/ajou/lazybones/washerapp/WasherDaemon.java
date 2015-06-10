@@ -235,6 +235,18 @@ public class WasherDaemon extends Thread {
 			e.printStackTrace();
 		}
 		this.unregisterFromServer(washerName);
+		try {
+			ncRef.unbind(path);
+		} catch (NotFound e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CannotProceed e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (org.omg.CosNaming.NamingContextPackage.InvalidName e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		orb.shutdown(false);
 	}
 

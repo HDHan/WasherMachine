@@ -10,6 +10,7 @@ module Washer {
 		ReservationSeq reservations();
 		ReservationSeq reservationsBy(in string who);
 		
+		long size();
 		boolean enqueue(in string who, in long long duration);
 		Reservation dequeue();
 		boolean isEmpty();

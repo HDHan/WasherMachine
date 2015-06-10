@@ -54,4 +54,10 @@ public class ReservationQueueServant extends ReservationQueuePOA {
 		return false;
 	}
 
+	@Override
+	public int size() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }
