@@ -7,17 +7,11 @@ import java.util.Properties;
 
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueue;
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueueHelper;
-import kr.ac.ajou.lazybones.washerapp.Washer.Washer;
-import kr.ac.ajou.lazybones.washerapp.Washer.WasherHelper;
-
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
@@ -82,7 +76,7 @@ public class WasherDaemon extends Thread {
 
 		Properties props = new Properties();
 		props.put("org.omg.CORBA.ORBInitialPort", "1050");
-		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213");
+		props.put("org.omg.CORBA.ORBInitialHost", "localhost"); //210.107.197.213
 
 		// STEP 1: create and initialize the ORB
 		orb = ORB.init(args, props);
@@ -99,7 +93,7 @@ public class WasherDaemon extends Thread {
 			// STEP 3: create servant object
 			washerServant = new WasherServant();
 			queueServant = washerServant.reservationQueue;
-			washerServant.setName(washerName);
+			washerServant.setWasherName(washerName);
 
 			// servant.setORB(orb);
 
@@ -126,10 +120,15 @@ public class WasherDaemon extends Thread {
 			// ncRef.unbind(path);
 
 			System.out.println("Daemon is ready and waiting for requests");
+			
+			/*
 			if (!registerToServer(name)){
 				System.out.println("Registering to server failed.");
 				return;
 			}
+			
+			*/
+			
 			System.out.println("Registered to server successfully.");
 			this.isSetup = true;
 

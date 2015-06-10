@@ -6,52 +6,90 @@ import kr.ac.ajou.lazybones.washerapp.Washer.Reservation;
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueuePOA;
 
 /**
- * Not implemented yet.
+ * Reservation Queue
+ * 
  * @author AJOU
  *
  */
 public class ReservationQueueServant extends ReservationQueuePOA {
 
 	ArrayList<Reservation> reservations;
-	
-	public ReservationQueueServant(){
+
+	public ReservationQueueServant() {
 		reservations = new ArrayList<>();
 	}
-	
+
+	// Return all reservations
 	@Override
 	public Reservation[] reservations() {
 		return reservations.toArray(new Reservation[reservations.size()]);
 	}
 
-
-	@Override
-	public Reservation dequeue() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean remove(int index) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
+	// Return reservations with user name (who)
 	@Override
 	public Reservation[] reservationsBy(String who) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<Reservation> myReservations = new ArrayList<>();
+
+		// find all reservation of 'who'
+		for (Reservation reservation : reservations) {
+			if (reservation.getWho() != null && reservation.getWho().contains(who)) {
+				myReservations.add(reservation);
+			}
+		}
+
+		return myReservations.toArray(new Reservation[myReservations.size()]);
 	}
 
+	// Check if it is empty
+	@Override
+	public boolean isEmpty() {
+		if (reservations.size() == 0) {
+			return true;
+		}
+		return false;
+	}
+
+	// Remove with index
+	@Override
+	public boolean remove(int index) {
+		reservations.remove(index);
+		return true;
+	}
+
+	// Insert reservation
 	@Override
 	public boolean enqueue(String who, long duration) {
-		// TODO Auto-generated method stub
+		reservations.add(new Reservation(who, duration));
 		return false;
+	}
+
+	// Get total waiting time
+	public long getTotalWaitingTime() {
+		long totalWaitingTime = 0;
+		for (Reservation reservation : reservations) {
+			totalWaitingTime += reservation.getDuration();
+		}
+		return totalWaitingTime;
+	}
+
+	// Get total waiting time
+	public long getTotalWaitingTime(int index) {
+		long totalWaitingTime = 0;
+		for (int i = 0; i < index; ++i) {
+			totalWaitingTime += getReservationByIndex(index).getDuration();
+		}
+		return totalWaitingTime;
+	}
+
+	// Remove first element
+	@Override
+	public Reservation dequeue() {
+		return reservations.remove(0);
+	}
+
+	// Return element by index
+	public Reservation getReservationByIndex(int index) {
+		return reservations.get(index);
 	}
 
 	@Override
