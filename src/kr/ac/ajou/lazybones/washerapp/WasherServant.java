@@ -1,7 +1,9 @@
 package kr.ac.ajou.lazybones.washerapp;
 
-import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueue;
-import kr.ac.ajou.lazybones.washerapp.Washer.WasherPOA;
+import java.util.LinkedList;
+import java.util.Queue;
+
+import kr.ac.ajou.lazybones.washerapp.washer.WasherPOA;
 
 /**
  * Not implemented yet.
@@ -10,45 +12,66 @@ import kr.ac.ajou.lazybones.washerapp.Washer.WasherPOA;
  */
 public class WasherServant extends WasherPOA{
 
-	private String name;
-	ReservationQueue reservationQueue;
+	private String washerName;
+	
+	Queue<Reservation> reservationQueue;
 	
 	int count = 0;
 	private boolean isOn;
 	
-	
-	public void setName(String name){
-		this.name = name;
-	}
-	
-	public String getName(){
-		return this.name;
-	}
-	
-	public void setReservationQueue(ReservationQueue reservationQueue) {
-		this.reservationQueue = reservationQueue;
-	}
-
-	@Override
-	public ReservationQueue reservationQueue() {
-		// TODO Auto-generated method stub
-		return reservationQueue;
+	// Constructor with String washerName
+	public WasherServant(String washerName) {
+		super();
+		this.washerName = washerName;
+		
+		// Make Queue
+		reservationQueue = new LinkedList<Reservation>();
 	}
 
 	@Override
 	public boolean on() {
-		// TODO Auto-generated method stub
+		// Switch on
+		if(isOn) { // already on
+			System.out.println("It's already on.");
+			return false;
+		}
 		isOn = true;
-		System.out.println(name + ", "+ count++);
+		System.out.println(washerName + " is on now.");
 		
+		// After Time with Duration, remove it.
+		while(!reservationQueue.isEmpty() && isOn) {
+			try {
+				// Wait with duration * 1000 milliseconds and remove reservation
+				Thread.sleep(reservationQueue.peek().getDuration()*1000);
+				reservationQueue.remove();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}	
 		return true;
 	}
 
 	@Override
 	public boolean off() {
-		// TODO Auto-generated method stub
+		// Switch off
+		if(!isOn) { // already off
+			System.out.println(washerName + " is already off.");
+			return false;
+		}
 		isOn = false;
+		System.out.println(washerName + " is off now.");
+
 		return true;
 	}
 
+	@Override
+	public void reservation(String who, long duration) {		
+		// Make Reservation 
+		Reservation reservation = new Reservation(who, duration);
+		
+		// Insert Reservation
+		reservationQueue.offer(reservation);
+	}
+
+	
 }

@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.Scanner;
 
-import kr.ac.ajou.lazybones.washerapp.Washer.Washer;
-import kr.ac.ajou.lazybones.washerapp.Washer.WasherHelper;
-
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CosNaming.NameComponent;
@@ -20,6 +17,7 @@ import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
+
 public class WasherMachineUI {
 	
 	//scanner is used for console input. DO NOT use this on thread.
@@ -28,11 +26,15 @@ public class WasherMachineUI {
 	//Initialize and run UI and daemon
 	public static void main(String[] args) {
 		
+		// Set Machine Name
 		System.out.println("Please set the name of this machine.");
-		String name = scanner.next();
+		String machineName = scanner.next();
 		
+		// Make UI & Daemon
 		WasherMachineUI ui = new WasherMachineUI();		
-		WasherDaemon daemon1 = new WasherDaemon(args, name);
+		WasherDaemon daemon1 = new WasherDaemon(args, machineName);
+		
+		// 
 		daemon1.setup();
 		
 		if(daemon1.isSetup()){

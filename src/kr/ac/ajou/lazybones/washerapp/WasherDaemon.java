@@ -2,9 +2,6 @@ package kr.ac.ajou.lazybones.washerapp;
 
 import java.util.Properties;
 
-import kr.ac.ajou.lazybones.washerapp.Washer.Washer;
-import kr.ac.ajou.lazybones.washerapp.Washer.WasherHelper;
-
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CosNaming.NameComponent;
@@ -18,6 +15,9 @@ import org.omg.PortableServer.POAHelper;
 import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
+
+import kr.ac.ajou.lazybones.washerapp.washer.Washer;
+import kr.ac.ajou.lazybones.washerapp.washer.WasherHelper;
 
 /**
  * Roughly implemented daemon. It registers reference of WasherServant to ORB
@@ -61,7 +61,8 @@ public class WasherDaemon extends Thread {
 
 		Properties props = new Properties();
 		props.put("org.omg.CORBA.ORBInitialPort", "1050");
-		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213");
+		//props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213");
+		props.put("org.omg.CORBA.ORBInitialHost", "localhost");
 
 		// STEP 1: create and initialize the ORB
 		orb = ORB.init(args, props);
@@ -77,8 +78,7 @@ public class WasherDaemon extends Thread {
 
 			// STEP 3: create servant object and give it the ORB
 			// reference (for shutdown())
-			servant = new WasherServant();
-			servant.setName(washerName);
+			servant = new WasherServant(washerName);
 
 			// servant.setORB(orb);
 

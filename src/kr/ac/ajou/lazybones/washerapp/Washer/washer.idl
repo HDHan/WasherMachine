@@ -1,0 +1,5 @@
+interface Washer {
+	boolean on();
+	boolean off();
+	void reservation(in string userName, in long long duration);
+};
