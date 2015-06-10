@@ -1,10 +1,22 @@
 package kr.ac.ajou.lazybones.washerapp;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import kr.ac.ajou.lazybones.washerapp.Washer.Washer;
 import kr.ac.ajou.lazybones.washerapp.Washer.WasherHelper;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CosNaming.NameComponent;
@@ -107,7 +119,11 @@ public class WasherDaemon extends Thread {
 			// ncRef.unbind(path);
 
 			System.out.println("Daemon is ready and waiting for requests");
-
+			if (!registerToServer(name)){
+				System.out.println("Registering to server failed.");
+				return;
+			}
+			System.out.println("Registered to server successfully.");
 			this.isSetup = true;
 
 		} catch (InvalidName | AdapterInactive | ServantNotActive | WrongPolicy
@@ -116,6 +132,86 @@ public class WasherDaemon extends Thread {
 			e.printStackTrace();
 		}
 
+	}
+
+	private boolean registerToServer(String name) {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		HttpGet httpGet = new HttpGet(
+				"http://210.107.197.213:8080/WasherMan/Washer/Register/" + name);
+
+		System.out.println("Registering the washer to : " + httpGet.getURI());
+
+		try {
+			CloseableHttpResponse response = httpClient.execute(httpGet);
+			try {
+				response.getStatusLine();
+				if (response.getStatusLine().getStatusCode() == 200) {
+					HttpEntity entity = response.getEntity();
+					BufferedReader rd = new BufferedReader(
+							new InputStreamReader(entity.getContent()));
+
+					String result = rd.readLine();
+					if (result.equals("OK"))
+						return true;
+					else
+						return false;
+
+				} else
+					return false;
+			} finally {
+				response.close();
+			}
+
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private boolean unregisterFromServer(String name) {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		HttpGet httpGet = new HttpGet(
+				"http://210.107.197.213:8080/WasherMan/Washer/Unregister/" + name);
+
+		System.out.println("Unregistering the washer from : " + httpGet.getURI());
+
+		try {
+			CloseableHttpResponse response = httpClient.execute(httpGet);
+			try {
+				response.getStatusLine();
+				if (response.getStatusLine().getStatusCode() == 200) {
+					HttpEntity entity = response.getEntity();
+					BufferedReader rd = new BufferedReader(
+							new InputStreamReader(entity.getContent()));
+
+					String result = rd.readLine();
+					if (result.equals("OK"))
+						return true;
+					else
+						return false;
+
+				} else
+					return false;
+			} finally {
+				response.close();
+			}
+
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	public void shutdown() {
@@ -131,6 +227,7 @@ public class WasherDaemon extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		this.unregisterFromServer(washerName);
 		orb.shutdown(false);
 	}
 
