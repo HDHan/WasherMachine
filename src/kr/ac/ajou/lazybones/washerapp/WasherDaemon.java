@@ -87,7 +87,7 @@ public class WasherDaemon extends Thread {
 
 		Properties props = new Properties();
 		props.put("org.omg.CORBA.ORBInitialPort", "1050");
-		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213"); //210.107.197.213
+		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213"); 
 
 		// STEP 1: create and initialize the ORB
 		orb = ORB.init(args, props);
@@ -125,32 +125,31 @@ public class WasherDaemon extends Thread {
 			String name = washerName;
 			path = ncRef.to_name(name);
 
-			
-			//ncRef.bind(path, queue);
-			
+			// ncRef.bind(path, queue);
+
 			BindingListHolder bl = new BindingListHolder();
 			BindingIteratorHolder blIt = new BindingIteratorHolder();
 			boolean isAlreadyRegistered = false;
-			
-			// 
+
+			// Search washer by name
 			ncRef.list(1000, bl, blIt);
 			Binding bindings[] = bl.value;
 			for (int i = 0; i < bindings.length; i++) {
 				int lastIx = bindings[i].binding_name.length - 1;
-				if (bindings[i].binding_type == BindingType.nobject && name.equals(bindings[i].binding_name[lastIx].id)) {
+				if (bindings[i].binding_type == BindingType.nobject
+						&& name.equals(bindings[i].binding_name[lastIx].id)) {
 					isAlreadyRegistered = true;
 				}
 			}
-			
-			// Do not register washer that is already registered
-			if(isAlreadyRegistered) {
-				
-				//Deleting washer test
+
+			// Do not register washer if the same name is already registered
+			if (isAlreadyRegistered) {
+				// Deleting washer test
 				ncRef.unbind(path);
 				System.out.println("unbind");
-				
-				
-				// Print registered washers... 
+				unregisterFromServer(name);
+
+				// Print registered washers...
 				for (int i = 0; i < bindings.length; i++) {
 					int lastIx = bindings[i].binding_name.length - 1;
 
@@ -158,21 +157,18 @@ public class WasherDaemon extends Thread {
 					if (bindings[i].binding_type == BindingType.nobject) {
 						System.out.println("Object: " + bindings[i].binding_name[lastIx].id);
 					}
-				}	
+				}
 			} else {
 				ncRef.bind(path, queue);
 			}
-			
-			
-			// ncRef.unbind(path);
+
 
 			System.out.println("Daemon is ready and waiting for requests");
 
-			/*
-			 * if (!registerToServer(name)){ System.out.println(
-			 * "Registering to server failed."); return; }
-			 * 
-			 */
+			if (!registerToServer(name)) {
+				System.out.println("Registering to server failed.");
+				return;
+			}
 
 			System.out.println("Registered to server successfully.");
 			this.isSetup = true;
@@ -191,7 +187,7 @@ public class WasherDaemon extends Thread {
 	private boolean registerToServer(String name) {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		HttpGet httpGet = new HttpGet("http://210.107.197.213:8080/WasherMan/Washer/Register/" + name);
+		HttpGet httpGet = new HttpGet("http://localhost:8080/WasherMan/Washer/Register/" + name);
 
 		System.out.println("Registering the washer to : " + httpGet.getURI());
 
@@ -229,7 +225,7 @@ public class WasherDaemon extends Thread {
 	private boolean unregisterFromServer(String name) {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		HttpGet httpGet = new HttpGet("http://210.107.197.213:8080/WasherMan/Washer/Unregister/" + name);
+		HttpGet httpGet = new HttpGet("http://localhost:8080/WasherMan/Washer/Unregister/" + name);
 
 		System.out.println("Unregistering the washer from : " + httpGet.getURI());
 
