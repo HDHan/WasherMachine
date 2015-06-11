@@ -2,6 +2,8 @@ package kr.ac.ajou.lazybones.washerapp;
 
 import java.util.ArrayList;
 
+import org.omg.CORBA.ORB;
+
 import kr.ac.ajou.lazybones.washerapp.Washer.Reservation;
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueuePOA;
 
@@ -13,6 +15,12 @@ import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueuePOA;
  */
 public class ReservationQueueServant extends ReservationQueuePOA {
 
+    private ORB orb;
+
+    public void setORB(ORB orb_val) {
+        orb = orb_val;
+    }
+	
 	ArrayList<Reservation> reservations;
 
 	public ReservationQueueServant() {

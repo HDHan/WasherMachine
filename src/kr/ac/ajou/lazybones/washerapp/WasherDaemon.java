@@ -3,6 +3,8 @@ package kr.ac.ajou.lazybones.washerapp;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueue;
@@ -15,9 +17,16 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
+import org.omg.CosNaming.Binding;
+import org.omg.CosNaming.BindingHolder;
+import org.omg.CosNaming.BindingIteratorHolder;
+import org.omg.CosNaming.BindingListHolder;
+import org.omg.CosNaming.BindingType;
 import org.omg.CosNaming.NameComponent;
+import org.omg.CosNaming.NamingContext;
 import org.omg.CosNaming.NamingContextExt;
 import org.omg.CosNaming.NamingContextExtHelper;
+import org.omg.CosNaming.NamingContextHelper;
 import org.omg.CosNaming.NamingContextPackage.AlreadyBound;
 import org.omg.CosNaming.NamingContextPackage.CannotProceed;
 import org.omg.CosNaming.NamingContextPackage.NotFound;
@@ -44,6 +53,8 @@ public class WasherDaemon extends Thread {
 	private NamingContextExt ncRef;
 	private NameComponent path[];
 
+	private static NamingContextExt namingService;
+
 	// servant: WasherServant which the daemon holds
 	private WasherServant washerServant;
 
@@ -62,7 +73,7 @@ public class WasherDaemon extends Thread {
 	public WasherServant getWasherServant() {
 		return washerServant;
 	}
-	
+
 	public ReservationQueueServant getQueueServant() {
 		return queueServant;
 	}
@@ -76,7 +87,7 @@ public class WasherDaemon extends Thread {
 
 		Properties props = new Properties();
 		props.put("org.omg.CORBA.ORBInitialPort", "1050");
-		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213");
+		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213"); //210.107.197.213
 
 		// STEP 1: create and initialize the ORB
 		orb = ORB.init(args, props);
@@ -86,8 +97,7 @@ public class WasherDaemon extends Thread {
 		try {
 			// STEP 2: get reference to rootpoa & activate the
 			// POAManager
-			rootpoa = POAHelper.narrow(orb
-					.resolve_initial_references("RootPOA"));
+			rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			rootpoa.the_POAManager().activate();
 
 			// STEP 3: create servant object
@@ -95,7 +105,7 @@ public class WasherDaemon extends Thread {
 			queueServant = washerServant.reservationQueue;
 			washerServant.setWasherName(washerName);
 
-			// servant.setORB(orb);
+			queueServant.setORB(orb);
 
 			// STEP 4: get an object reference based on the servant
 			// implementation.
@@ -105,8 +115,7 @@ public class WasherDaemon extends Thread {
 
 			// STEP 5: get reference of the root naming context (naming
 			// service).
-			org.omg.CORBA.Object objRef = orb
-					.resolve_initial_references("NameService");
+			org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
 			ncRef = NamingContextExtHelper.narrow(objRef);
 
 			// STEP 6: register the CORBA object reference to the naming
@@ -115,26 +124,65 @@ public class WasherDaemon extends Thread {
 			// same name.
 			String name = washerName;
 			path = ncRef.to_name(name);
-			ncRef.bind(path, queue);
 
+			
+			//ncRef.bind(path, queue);
+			
+			BindingListHolder bl = new BindingListHolder();
+			BindingIteratorHolder blIt = new BindingIteratorHolder();
+			boolean isAlreadyRegistered = false;
+			
+			// 
+			ncRef.list(1000, bl, blIt);
+			Binding bindings[] = bl.value;
+			for (int i = 0; i < bindings.length; i++) {
+				int lastIx = bindings[i].binding_name.length - 1;
+				if (bindings[i].binding_type == BindingType.nobject && name.equals(bindings[i].binding_name[lastIx].id)) {
+					isAlreadyRegistered = true;
+				}
+			}
+			
+			// Do not register washer that is already registered
+			if(isAlreadyRegistered) {
+				
+				//Deleting washer test
+				ncRef.unbind(path);
+				System.out.println("unbind");
+				
+				
+				// Print registered washers... 
+				for (int i = 0; i < bindings.length; i++) {
+					int lastIx = bindings[i].binding_name.length - 1;
+
+					// check to see if this is a naming context
+					if (bindings[i].binding_type == BindingType.nobject) {
+						System.out.println("Object: " + bindings[i].binding_name[lastIx].id);
+					}
+				}	
+			} else {
+				ncRef.bind(path, queue);
+			}
+			
+			
 			// ncRef.unbind(path);
 
 			System.out.println("Daemon is ready and waiting for requests");
-			
+
 			/*
-			if (!registerToServer(name)){
-				System.out.println("Registering to server failed.");
-				return;
-			}
-			
-			*/
-			
+			 * if (!registerToServer(name)){ System.out.println(
+			 * "Registering to server failed."); return; }
+			 * 
+			 */
+
 			System.out.println("Registered to server successfully.");
 			this.isSetup = true;
 
 		} catch (InvalidName | AdapterInactive | ServantNotActive | WrongPolicy
-				| org.omg.CosNaming.NamingContextPackage.InvalidName | NotFound
-				| CannotProceed | AlreadyBound e) {
+				| org.omg.CosNaming.NamingContextPackage.InvalidName | NotFound | CannotProceed |
+
+		AlreadyBound e)
+
+		{
 			e.printStackTrace();
 		}
 
@@ -143,8 +191,7 @@ public class WasherDaemon extends Thread {
 	private boolean registerToServer(String name) {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		HttpGet httpGet = new HttpGet(
-				"http://210.107.197.213:8080/WasherMan/Washer/Register/" + name);
+		HttpGet httpGet = new HttpGet("http://210.107.197.213:8080/WasherMan/Washer/Register/" + name);
 
 		System.out.println("Registering the washer to : " + httpGet.getURI());
 
@@ -154,8 +201,7 @@ public class WasherDaemon extends Thread {
 				response.getStatusLine();
 				if (response.getStatusLine().getStatusCode() == 200) {
 					HttpEntity entity = response.getEntity();
-					BufferedReader rd = new BufferedReader(
-							new InputStreamReader(entity.getContent()));
+					BufferedReader rd = new BufferedReader(new InputStreamReader(entity.getContent()));
 
 					String result = rd.readLine();
 					if (result.equals("OK"))
@@ -179,12 +225,11 @@ public class WasherDaemon extends Thread {
 			return false;
 		}
 	}
-	
+
 	private boolean unregisterFromServer(String name) {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		HttpGet httpGet = new HttpGet(
-				"http://210.107.197.213:8080/WasherMan/Washer/Unregister/" + name);
+		HttpGet httpGet = new HttpGet("http://210.107.197.213:8080/WasherMan/Washer/Unregister/" + name);
 
 		System.out.println("Unregistering the washer from : " + httpGet.getURI());
 
@@ -194,8 +239,7 @@ public class WasherDaemon extends Thread {
 				response.getStatusLine();
 				if (response.getStatusLine().getStatusCode() == 200) {
 					HttpEntity entity = response.getEntity();
-					BufferedReader rd = new BufferedReader(
-							new InputStreamReader(entity.getContent()));
+					BufferedReader rd = new BufferedReader(new InputStreamReader(entity.getContent()));
 
 					String result = rd.readLine();
 					if (result.equals("OK"))
