@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Scanner;
 
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueue;
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueueHelper;
@@ -78,6 +79,10 @@ public class WasherDaemon extends Thread {
 		return queueServant;
 	}
 
+	public void setWasherName(String washerName) {
+		this.washerName = washerName;
+	}
+
 	/**
 	 * Initialize object request broker, register new WasherDaemon reference,
 	 * and wait for requests for the reference.
@@ -87,7 +92,10 @@ public class WasherDaemon extends Thread {
 
 		Properties props = new Properties();
 		props.put("org.omg.CORBA.ORBInitialPort", "1050");
-		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213"); 
+		props.put("org.omg.CORBA.ORBInitialHost", "210.107.197.213");
+		
+		// for user input 
+		Scanner scanner = new Scanner(System.in);
 
 		// STEP 1: create and initialize the ORB
 		orb = ORB.init(args, props);
@@ -95,8 +103,7 @@ public class WasherDaemon extends Thread {
 		POA rootpoa;
 
 		try {
-			// STEP 2: get reference to rootpoa & activate the
-			// POAManager
+			// STEP 2: get reference to rootpoa & activate the POAManager
 			rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			rootpoa.the_POAManager().activate();
 
@@ -107,71 +114,49 @@ public class WasherDaemon extends Thread {
 
 			queueServant.setORB(orb);
 
-			// STEP 4: get an object reference based on the servant
-			// implementation.
+			// STEP 4: get an object reference based on the servant implementation.
 			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(queueServant);
 
 			ReservationQueue queue = ReservationQueueHelper.narrow(ref);
 
-			// STEP 5: get reference of the root naming context (naming
-			// service).
+			// STEP 5: get reference of the root naming context (naming service).
 			org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
 			ncRef = NamingContextExtHelper.narrow(objRef);
 
-			// STEP 6: register the CORBA object reference to the naming
-			// service with
-			// washerName. Client must search the object using the
-			// same name.
+			// STEP 6: register the CORBA object reference to the naming service with
+			// washerName. Client must search the object using the same name.
 			String name = washerName;
 			path = ncRef.to_name(name);
 
-			// ncRef.bind(path, queue);
-
-			BindingListHolder bl = new BindingListHolder();
-			BindingIteratorHolder blIt = new BindingIteratorHolder();
-			boolean isAlreadyRegistered = false;
-
-			// Search washer by name
-			ncRef.list(1000, bl, blIt);
-			Binding bindings[] = bl.value;
-			for (int i = 0; i < bindings.length; i++) {
-				int lastIx = bindings[i].binding_name.length - 1;
-				if (bindings[i].binding_type == BindingType.nobject
-						&& name.equals(bindings[i].binding_name[lastIx].id)) {
-					isAlreadyRegistered = true;
-				}
+			// if washerName is ERASEALL, unbind ORBD
+			if (name.equals("ERASEALL")) {
+				removeAllWashers(ncRef);
 			}
 
 			// Do not register washer if the same name is already registered
-			if (isAlreadyRegistered) {
+			if (searchWasherName(name)) {
 				// Deleting washer test
-				ncRef.unbind(path);
-				System.out.println("unbind");
-				unregisterFromServer(name);
-
-				// Print registered washers...
-				for (int i = 0; i < bindings.length; i++) {
-					int lastIx = bindings[i].binding_name.length - 1;
-
-					// check to see if this is a naming context
-					if (bindings[i].binding_type == BindingType.nobject) {
-						System.out.println("Object: " + bindings[i].binding_name[lastIx].id);
-					}
+				System.out.println("We found " + name + ". Input 'delete' if you want to delete otherwise enter any key.");
+				String input = scanner.next();
+				if(input.equals("delete")) {
+					ncRef.unbind(path);
+					unregisterFromServer(name);
 				}
 			} else {
 				ncRef.bind(path, queue);
 			}
 
-
 			System.out.println("Daemon is ready and waiting for requests");
 
 			if (!registerToServer(name)) {
 				System.out.println("Registering to server failed.");
-				return;
 			}
 
 			System.out.println("Registered to server successfully.");
 			this.isSetup = true;
+			
+			// print washer list from orbd
+			printWasherList();
 
 		} catch (InvalidName | AdapterInactive | ServantNotActive | WrongPolicy
 				| org.omg.CosNaming.NamingContextPackage.InvalidName | NotFound | CannotProceed |
@@ -182,6 +167,81 @@ public class WasherDaemon extends Thread {
 			e.printStackTrace();
 		}
 
+	}
+
+	/*
+	 * Remove all washers in orb
+	 */
+	private boolean removeAllWashers(NamingContextExt ncRef) {
+		BindingListHolder bl = new BindingListHolder();
+		BindingIteratorHolder blIt = new BindingIteratorHolder();
+		
+		ncRef.list(1000, bl, blIt);
+		Binding bindings[] = bl.value;
+
+		try {
+			for (int i = 0; i < bindings.length; i++) {
+				int lastIx = bindings[i].binding_name.length - 1;
+				if (bindings[i].binding_type == BindingType.nobject) {
+					path = ncRef.to_name(bindings[i].binding_name[lastIx].id);
+					ncRef.unbind(path);
+					unregisterFromServer(bindings[i].binding_name[lastIx].id);
+					return true;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+
+	/*
+	 * Search washer by name from orb
+	 */
+	private boolean searchWasherName(String washerName) {
+		BindingListHolder bl = new BindingListHolder();
+		BindingIteratorHolder blIt = new BindingIteratorHolder();
+		boolean isAlreadyRegistered = false;
+
+		ncRef.list(1000, bl, blIt);
+		Binding bindings[] = bl.value;
+
+
+		for (int i = 0; i < bindings.length; i++) {
+			int lastIx = bindings[i].binding_name.length - 1;
+			if (bindings[i].binding_type == BindingType.nobject
+					&& washerName.equals(bindings[i].binding_name[lastIx].id)) {
+				isAlreadyRegistered = true;
+			}
+		}
+		return isAlreadyRegistered;
+	}
+	
+	/*
+	 * Print washer list from orbd
+	 */
+	private boolean printWasherList() {
+		BindingListHolder bl = new BindingListHolder();
+		BindingIteratorHolder blIt = new BindingIteratorHolder();
+
+		ncRef.list(1000, bl, blIt);
+		Binding bindings[] = bl.value;
+
+		// Print registered washers...
+		System.out.println("======================================");
+		System.out.println("Registered Washers from ORBD:");
+		for (int i = 0; i < bindings.length; i++) {
+			int lastIx = bindings[i].binding_name.length - 1;
+
+			// check to see if this is a naming context
+			
+			if (bindings[i].binding_type == BindingType.nobject) {
+				System.out.println("	Object: " + bindings[i].binding_name[lastIx].id);
+			}
+		}
+		System.out.println("======================================");
+		return true;
 	}
 
 	private boolean registerToServer(String name) {
@@ -274,18 +334,6 @@ public class WasherDaemon extends Thread {
 			e.printStackTrace();
 		}
 		this.unregisterFromServer(washerName);
-		try {
-			ncRef.unbind(path);
-		} catch (NotFound e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CannotProceed e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (org.omg.CosNaming.NamingContextPackage.InvalidName e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		orb.shutdown(false);
 	}
 

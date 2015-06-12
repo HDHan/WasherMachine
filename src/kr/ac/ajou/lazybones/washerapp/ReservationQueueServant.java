@@ -102,8 +102,7 @@ public class ReservationQueueServant extends ReservationQueuePOA {
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return reservations.size();
 	}
 
 }
