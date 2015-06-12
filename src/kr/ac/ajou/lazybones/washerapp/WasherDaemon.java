@@ -148,9 +148,10 @@ public class WasherDaemon extends Thread {
 
 			System.out.println("Daemon is ready and waiting for requests");
 
+			/*
 			if (!registerToServer(name)) {
 				System.out.println("Registering to server failed.");
-			}
+			}*/
 
 			System.out.println("Registered to server successfully.");
 			this.isSetup = true;
