@@ -1,4 +1,4 @@
-package kr.ac.ajou.lazybones.washerapp;
+package kr.ac.ajou.lazybones.washerapp.servant;
 
 import java.util.ArrayList;
 

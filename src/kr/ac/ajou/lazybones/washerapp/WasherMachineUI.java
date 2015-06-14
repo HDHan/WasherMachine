@@ -3,64 +3,110 @@ package kr.ac.ajou.lazybones.washerapp;
 import java.util.Scanner;
 
 public class WasherMachineUI {
-
-	// scanner is used for console input. DO NOT use this on thread.
-	private static final Scanner scanner = new Scanner(System.in);
-
-	// Initialize and run UI and daemon
 	public static void main(String[] args) {
-		System.out.println("Please set the name of this machine.");
-		String name = scanner.next();
 
-		WasherMachineUI ui = new WasherMachineUI();
-		WasherDaemon daemon1 = new WasherDaemon(args, name);
-		daemon1.setup();
-
-		if (daemon1.isSetup()) {
-			daemon1.start();
-			ui.waitForTurningOnOff(daemon1);
-		}
-	}
-
-	/**
-	 * Loop function for turning on/off doing laundry.
-	 * 
-	 * @param daemon
-	 */
-	public void waitForTurningOnOff(WasherDaemon daemon) {
-		Scanner scanner = new Scanner(System.in); 
-		
 		boolean isRunning = true;
+		Scanner scanner = new Scanner(System.in);
+		String input = "";
+
+		String washerName = "";
+
+		// Initialize Daemon
+		WasherDaemon daemon = new WasherDaemon(args);
+
+		if (daemon.setup()) {
+			daemon.start();
+		}
+
 		// Use while loop to get instructions (on/off/exit)
 		while (isRunning) {
-			System.out.println("Input 'on' or 'off'. Input 'exit' if you want to exit.");
-			System.out.println("You can input 'set' for setting new machine.");
+			// First view
+			System.out.println("=======================");
+			System.out.println("        MENU         ");
+			System.out.println("1. View Washers");
+			System.out.println("2. Register New Washer");
+			System.out.println("3. Unregister Washer");
+			System.out.println("4. On/off Washer");
+			System.out.println("5. Exit");
+			System.out.println("=======================");
 
-			String input = "";
-			if(scanner.hasNext()) {
-				 input = scanner.next();
+			if (scanner.hasNext()) {
+				input = scanner.next();
 			}
+
 			switch (input.toLowerCase()) {
-			case "on":
-				if (daemon.getWasherServant().on())
-					System.out.println("Washer is turned on.");
-				else
-					System.out.println("Washer is not ready to turn on yet.");
+			case "1": // View Washers
+				daemon.printWasherList();
 				break;
-			case "off":
-				if (daemon.getWasherServant().off())
-					System.out.println("Washer is turned off.");
-				else
-					System.out.println("Washer is not ready to turn off yet.");
+			case "2": // Register New Washer
+				System.out.println("Set new washer name please");
+				// User input
+				if (scanner.hasNext()) {
+					washerName = scanner.next();
+					// Special keyword "ALL" is reserved for remove all washers.
+					if (washerName.equals("ALL")) {
+						System.out.println("You can't use 'ALL' keywords. Try other names.");
+						break;
+					}
+					// Register if same name doesn't exist
+					if (daemon.searchWasherByName(washerName)) {
+						System.out.println("Already exists! Try new name.");
+						break;
+					}
+					daemon.registerWasherByName(washerName);
+				}
 				break;
-			case "set":
-				System.out.println("Please set the name of this machine.");
-				String name = scanner.next();
-				daemon.setWasherName(name);
-				daemon.setup();
-				waitForTurningOnOff(daemon);
+			case "3": // Unregister Washer
+				System.out.println("Please set washer name that you want to delete");
+				if (scanner.hasNext()) {
+					washerName = scanner.next();
+					// Special keyword "ALL" is reserved for remove all washers.
+					if (washerName.equals("ALL")) {
+						daemon.unregisterWasherAll();
+						break;
+					}
+					// Register if same name exists
+					if (!daemon.searchWasherByName(washerName)) {
+						System.out.println("Doesn't exist! Check washer name.");
+						break;
+					}
+					daemon.unregisterWasherByName(washerName);
+				}
 				break;
-			case "exit":
+			case "4": // On/Off Washer
+				System.out.println("Please input washer name");
+				if (scanner.hasNext()) {
+					washerName = scanner.next();
+					//Check already Exists
+					if (!daemon.searchWasherByName(washerName)) {
+						System.out.println("Doesn't exist! Check washer name.");
+						break;
+					}
+					System.out.println("Please input 'on' or 'off'");
+					if (scanner.hasNext()) {
+						input = scanner.next();
+						switch (input.toLowerCase()) {
+						case "on":
+							if (daemon.getWasherServant().on()) {
+								System.out.println("Washer is turned on.");
+								break;
+							}
+							System.out.println("Washer is not ready to turn on yet.");
+							break;
+						case "off":
+							if (daemon.getWasherServant().off()) {
+								System.out.println("Washer is turned off.");
+								break;
+							}	
+							System.out.println("Washer is not ready to turn off yet.");
+							break;
+						default:
+							System.out.println("Wrong input. Please try again.");
+						}
+					}
+				}
+				break;
+			case "5": // Exit
 				isRunning = false;
 				daemon.interrupt();
 				break;
@@ -68,10 +114,23 @@ public class WasherMachineUI {
 				System.out.println("Wrong input. Please try again.");
 				break;
 
+			/*
+			 * case "on": if (daemon.getWasherServant().on())
+			 * System.out.println("Washer is turned on."); else
+			 * System.out.println("Washer is not ready to turn on yet."); break;
+			 * case "off": if (daemon.getWasherServant().off())
+			 * System.out.println("Washer is turned off."); else
+			 * System.out.println("Washer is not ready to turn off yet.");
+			 * break; case "set": System.out.println(
+			 * "Please set the name of this machine."); String name =
+			 * scanner.next(); daemon.setWasherName(name); daemon.setup();
+			 * waitForTurningOnOff(daemon); break; case "exit": isRunning =
+			 * false; daemon.interrupt(); break; default: System.out.println(
+			 * "Wrong input. Please try again."); break;
+			 */
 			}
 		}
 		System.out.println("Bye!");
 		scanner.close();
 	}
-
 }
