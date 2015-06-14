@@ -145,6 +145,8 @@ public class WasherDaemon extends Thread {
 			} else {
 				ncRef.bind(path, queue);
 			}
+			this.registerToServer(name);
+			
 
 			System.out.println("Daemon is ready and waiting for requests");
 
@@ -248,7 +250,7 @@ public class WasherDaemon extends Thread {
 	private boolean registerToServer(String name) {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		HttpGet httpGet = new HttpGet("http://localhost:8080/WasherMan/Washer/Register/" + name);
+		HttpGet httpGet = new HttpGet("http://210.107.197.213:8080/WasherMan/Washer/Register/" + name);
 
 		System.out.println("Registering the washer to : " + httpGet.getURI());
 
