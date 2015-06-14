@@ -13,24 +13,24 @@ import kr.ac.ajou.lazybones.washerapp.Washer.WasherPOA;
  *
  */
 public class WasherServant extends WasherPOA {
-	
-	private class WasherTimerTask extends TimerTask{
-		
+
+	private class WasherTimerTask extends TimerTask {
+
 		WasherServant washer;
-		
-		public WasherTimerTask(WasherServant washer){
+
+		public WasherTimerTask(WasherServant washer) {
 			this.washer = washer;
 		}
-		
+
 		@Override
 		public void run() {
-			//It simply stops the given washer.
+			// It simply stops the given washer.
 			System.out.println("DONE!");
 			washer.off();
 		}
-		
+
 	};
-	
+
 	private Timer timer = new Timer();
 	private String washerName;
 	private ReservationQueueServant reservationQueueServant = new ReservationQueueServant();
@@ -38,24 +38,24 @@ public class WasherServant extends WasherPOA {
 	int count = 0;
 	private boolean isOn;
 
-	public WasherServant (String name){
+	public WasherServant(String name) {
 		this.washerName = name;
 	}
-	
+
 	/*
-	 *  Set washer's name
+	 * Set washer's name
 	 */
 	public void setWasherName(String washerName) {
 		this.washerName = washerName;
 	}
 
 	/*
-	 *  Get washer's name
+	 * Get washer's name
 	 */
 	public String getWasherName() {
 		return this.washerName;
 	}
-	
+
 	/*
 	 * Get ReservaitonQueueServant
 	 */
@@ -64,7 +64,8 @@ public class WasherServant extends WasherPOA {
 	}
 
 	/*
-	 *  Turn on the washer
+	 * Turn on the washer
+	 * 
 	 * @see kr.ac.ajou.lazybones.washerapp.Washer.WasherOperations#on()
 	 */
 	@Override
@@ -74,42 +75,45 @@ public class WasherServant extends WasherPOA {
 			System.out.println("It's already on.");
 			return false;
 		}
-		System.out.println(washerName + " is on now.");
-		
-		if(!reservationQueueServant.isEmpty()){
+
+		if (!reservationQueueServant.isEmpty()) {
 			Reservation reservation = reservationQueueServant.dequeue();
-			timer.schedule(new WasherTimerTask(this), reservation.getDuration()*60*1000);		
-			isOn = true;			
-		}
-		else{
+			timer.schedule(new WasherTimerTask(this),
+					reservation.getDuration() * 60 * 1000);
+			isOn = true;
+			System.out.println(washerName + " is on now.");
+
+		} else {
 			System.out.println("No reservation exists!");
 			isOn = false;
 		}
-		
-//		// After Time with Duration, remove it.
-//		while (!reservationQueue.isEmpty() && isOn) {
-//			try {
-//				// Wait for (duration * 1000) milliseconds
-//				Thread.sleep(reservationQueue.getReservationByIndex(0).getDuration() * 1000);
-//				// Remove reservation
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		}
+
+		// // After Time with Duration, remove it.
+		// while (!reservationQueue.isEmpty() && isOn) {
+		// try {
+		// // Wait for (duration * 1000) milliseconds
+		// Thread.sleep(reservationQueue.getReservationByIndex(0).getDuration()
+		// * 1000);
+		// // Remove reservation
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		// }
 
 		return isOn;
 	}
 
 	/*
-	 *  Turn off the washer
+	 * Turn off the washer
+	 * 
 	 * @see kr.ac.ajou.lazybones.washerapp.Washer.WasherOperations#off()
 	 */
 	@Override
 	public boolean off() {
-		
-		//Purge all scheduled tasks in timer(To avoid duplicates)
+
+		// Purge all scheduled tasks in timer(To avoid duplicates)
 		timer.purge();
-		
+
 		// Switch off
 		if (!isOn) { // already off
 			System.out.println(washerName + " is already off.");
@@ -123,6 +127,7 @@ public class WasherServant extends WasherPOA {
 
 	/*
 	 * Get total waiting time
+	 * 
 	 * @see kr.ac.ajou.lazybones.washerapp.Washer.WasherOperations#runningTime()
 	 */
 	@Override
