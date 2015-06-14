@@ -38,6 +38,10 @@ public class WasherServant extends WasherPOA {
 	int count = 0;
 	private boolean isOn;
 
+	public WasherServant (String name){
+		this.washerName = name;
+	}
+	
 	/*
 	 *  Set washer's name
 	 */
@@ -123,7 +127,7 @@ public class WasherServant extends WasherPOA {
 	 */
 	@Override
 	public long runningTime() {
-		return reservationQueue.getTotalWaitingTime();
+		return reservationQueueServant.getTotalWaitingTime();
 	}
 
 }
