@@ -47,6 +47,39 @@ public class ReservationQueueServant extends ReservationQueuePOA {
 
 		return myReservations.toArray(new Reservation[myReservations.size()]);
 	}
+	
+	@Override
+	public Reservation[] reservationWaitingTimes() {
+		ArrayList<Reservation> myReservations = new ArrayList<>();
+		Long accumulatedTime = 0l;
+
+		// find all reservation of 'who'
+		for (Reservation reservation : reservations) {
+			reservation.duration += accumulatedTime;
+			myReservations.add(reservation);
+
+			accumulatedTime += reservation.duration;
+		}
+
+		return myReservations.toArray(new Reservation[myReservations.size()]);
+	}
+
+	@Override
+	public Reservation[] reservationWaitingTimesBy(String who) {
+		ArrayList<Reservation> myReservations = new ArrayList<>();
+		Long accumulatedTime = 0l;
+
+		// find all reservation of 'who'
+		for (Reservation reservation : reservations) {
+			reservation.duration += accumulatedTime;
+			if (reservation.getWho() != null && reservation.getWho().contains(who)) 
+				myReservations.add(reservation);
+			
+			accumulatedTime += reservation.duration;
+		}
+
+		return myReservations.toArray(new Reservation[myReservations.size()]);
+	}
 
 	// Check if it is empty
 	@Override

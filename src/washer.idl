@@ -9,6 +9,8 @@ module Washer {
 	interface ReservationQueue {
 		ReservationSeq reservations();
 		ReservationSeq reservationsBy(in string who);
+		ReservationSeq reservationWaitingTimes();
+		ReservationSeq reservationWaitingTimesBy(in string who);
 		
 		long size();
 		boolean enqueue(in string who, in long long duration);
