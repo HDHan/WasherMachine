@@ -97,14 +97,14 @@ public class WasherMachineUI {
 						input = scanner.next();
 						switch (input.toLowerCase()) {
 						case "on":
-							if (daemon.getWasherServant().on()) {
+							if (daemon.getWasherServant(washerName).on()) {
 								System.out.println("Washer is turned on.");
 								break;
 							}
 							System.out.println("Washer is not ready to turn on yet.");
 							break;
 						case "off":
-							if (daemon.getWasherServant().off()) {
+							if (daemon.getWasherServant(washerName).off()) {
 								System.out.println("Washer is turned off.");
 								break;
 							}	

@@ -15,7 +15,10 @@
 
 package kr.ac.ajou.lazybones.washerapp;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueue;
 import kr.ac.ajou.lazybones.washerapp.Washer.ReservationQueueHelper;
 import kr.ac.ajou.lazybones.washerapp.servant.ReservationQueueServant;
@@ -50,8 +53,8 @@ public class WasherDaemon extends Thread {
 	POA rootpoa;
 
 	// servant: WasherServant, ReservationQueueServant which the daemon holds
-	private WasherServant washerServant; 
-	private ReservationQueueServant queueServant;
+	private Map<String, WasherServant> washerServants; 
+	private Map<String, ReservationQueueServant> queueServants;
 
 	// orb: Object Request Broker object for shutting down
 	private ORB orb;
@@ -59,14 +62,17 @@ public class WasherDaemon extends Thread {
 	public WasherDaemon(String[] args) {
 		isSetup = false;
 		this.args = args;
+		
+		washerServants = new HashMap<>();
+		queueServants = new HashMap<>();
 	}
 
-	public WasherServant getWasherServant() {
-		return washerServant;
+	public WasherServant getWasherServant(String name) {
+		return washerServants.get(name);
 	}
 
-	public ReservationQueueServant getQueueServant() {
-		return queueServant;
+	public ReservationQueueServant getQueueServant(String name) {
+		return queueServants.get(name);
 	}
 
 	/**
@@ -115,6 +121,7 @@ public class WasherDaemon extends Thread {
 			int lastIx = bindings[i].binding_name.length - 1;
 			if (bindings[i].binding_type == BindingType.nobject
 					&& washerName.equals(bindings[i].binding_name[lastIx].id)) {
+				
 				return true;
 			}
 		}
@@ -158,9 +165,9 @@ public class WasherDaemon extends Thread {
 	public boolean registerWasherByName(String washerName) {
 		try {
 			// Create servant object
-			washerServant = new WasherServant(washerName);
-			queueServant = washerServant.getReservationQueueServant();
-
+			WasherServant washerServant = new WasherServant(washerName);
+			ReservationQueueServant queueServant = washerServant.getReservationQueueServant();
+			
 			queueServant.setORB(orb);
 
 			// Get an object reference based on the servant
@@ -174,6 +181,9 @@ public class WasherDaemon extends Thread {
 			// name.
 			path = ncRef.to_name(washerName);
 			ncRef.bind(path, queue);
+			
+			washerServants.put(washerName, washerServant);
+			queueServants.put(washerName, queueServant);
 
 			return true;
 		} catch (Exception e) {
