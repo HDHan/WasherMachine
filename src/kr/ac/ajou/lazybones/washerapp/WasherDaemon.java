@@ -101,8 +101,9 @@ public class WasherDaemon extends Thread {
 		return this.isSetup;
 	}
 
-	/*
+	/**
 	 * Search washer by name from orb Return true if wahserName exists
+	 * 
 	 */
 	public boolean searchWasherByName(String washerName) {
 		BindingListHolder bl = new BindingListHolder();
@@ -120,8 +121,9 @@ public class WasherDaemon extends Thread {
 		return false;
 	}
 
-	/*
-	 * Print washer list from orbd
+	/**
+	 * Print washer list from object request broker daemon.
+	 * 
 	 */
 	public boolean printWasherList() {
 		BindingListHolder bl = new BindingListHolder();
@@ -149,33 +151,30 @@ public class WasherDaemon extends Thread {
 		return true;
 	}
 
-	/*
+	/**
 	 * Register washer by name to orbd name service
+	 * 
 	 */
 	public boolean registerWasherByName(String washerName) {
 		try {
-			// STEP 3: create servant object
+			// Create servant object
 			washerServant = new WasherServant(washerName);
 			queueServant = washerServant.getReservationQueueServant();
 
 			queueServant.setORB(orb);
 
-			// STEP 4: get an object reference based on the servant
+			// Get an object reference based on the servant
 			// implementation.
 			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(queueServant);
 
 			ReservationQueue queue = ReservationQueueHelper.narrow(ref);
 
-			// STEP 6: register the CORBA object reference to the naming service
+			// Register the CORBA object reference to the naming service
 			// with washerName. Client must search the object using the same
 			// name.
 			path = ncRef.to_name(washerName);
 			ncRef.bind(path, queue);
 
-			/*
-			 * if (!registerToServer(name)) { System.out.println(
-			 * "Registering to server failed."); }
-			 */
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -236,6 +235,8 @@ public class WasherDaemon extends Thread {
 	}
 
 	/*
+	 * Deprecated (since WasherMan does not need manual registration) 
+	 * 
 	 * private boolean registerToServer(String washerName) { CloseableHttpClient
 	 * httpClient = HttpClients.createDefault();
 	 * 
