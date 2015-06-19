@@ -284,6 +284,9 @@ public class WasherDaemon extends Thread {
 	 * Auto-generated catch block e.printStackTrace(); return false; } }
 	 */
 
+	/**
+	 * Shutdown all running machines.
+	 */
 	public void shutdown() {
 		// Unregister All Washers from orbd
 		unregisterWasherAll();
@@ -291,6 +294,9 @@ public class WasherDaemon extends Thread {
 		orb.shutdown(false);
 	}
 
+	/**
+	 * Inherited method from thread class.	
+	 */
 	@Override
 	public void run() {
 		// STEP 7: wait for requests from clients
@@ -300,6 +306,9 @@ public class WasherDaemon extends Thread {
 			System.out.println("Not set up yet.");
 	}
 
+	/**
+	 * Inherited method from thread class.
+	 */
 	@Override
 	public void interrupt() {
 		System.out.println("Shutting down the daemon");

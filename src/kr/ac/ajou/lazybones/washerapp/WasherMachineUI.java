@@ -2,6 +2,11 @@ package kr.ac.ajou.lazybones.washerapp;
 
 import java.util.Scanner;
 
+/**
+ * Main CLI interface for WasherMachine application. 
+ * @author AJOU
+ *
+ */
 public class WasherMachineUI {
 	public static void main(String[] args) {
 
@@ -14,8 +19,13 @@ public class WasherMachineUI {
 		// Initialize Daemon
 		WasherDaemon daemon = new WasherDaemon(args);
 
+		
 		if (daemon.setup()) {
 			daemon.start();
+		} else{
+			System.out.println("Failed to initialize daemon.");
+			scanner.close();
+			return;
 		}
 
 		// Use while loop to get instructions (on/off/exit)
@@ -109,6 +119,7 @@ public class WasherMachineUI {
 			case "5": // Exit
 				isRunning = false;
 				daemon.interrupt();
+				
 				break;
 			default:
 				System.out.println("Wrong input. Please try again.");
